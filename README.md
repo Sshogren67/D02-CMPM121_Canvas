@@ -1,6 +1,8 @@
-# D2 starter
+# D2 Drawing Canvas
 
-A minimal TypeScript/Vite browser project with Deno checks and GitHub Pages deployment.
+By Seamus and Spencer
+
+Uses a canvas to make a fun drawing program.
 
 ## Credits
 
