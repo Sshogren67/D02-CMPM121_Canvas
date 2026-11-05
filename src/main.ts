@@ -32,6 +32,8 @@ if (context) {
 }
 
 const strokes: Stroke[] = [];
+const undoneStrokes: Stroke[] = [];
+
 canvas.addEventListener("mousedown", (event) => {
   isDrawing = true;
   const rect = canvas.getBoundingClientRect();
@@ -45,6 +47,7 @@ canvas.addEventListener("mousedown", (event) => {
       : "black",
   });
 });
+
 canvas.addEventListener("mousemove", (event) => {
   if (!isDrawing) return;
   const rect = canvas.getBoundingClientRect();
@@ -62,12 +65,15 @@ canvas.addEventListener("mousemove", (event) => {
     context.stroke();
   }
 });
+
 canvas.addEventListener("mouseup", () => {
   isDrawing = false;
 });
+
 canvas.addEventListener("mouseleave", () => {
   isDrawing = false;
 });
+
 const clearButton = document.createElement("button");
 clearButton.textContent = "Clear Canvas";
 clearButton.addEventListener("click", () => {
@@ -76,4 +82,38 @@ clearButton.addEventListener("click", () => {
     context.clearRect(0, 0, canvas.width, canvas.height);
   }
 });
+
+function updateCanvas() {
+  if (!context) return;
+
+  context.clearRect(0, 0, canvas.width, canvas.height);
+
+  for (const stroke of strokes) {
+    context.beginPath();
+    context.lineWidth = stroke.width;
+    context.strokeStyle = stroke.color;
+
+    const points = stroke.points;
+
+    for (let i = 1; i < points.length; i++) {
+      context.moveTo(points[i - 1].x, points[i - 1].y);
+      context.lineTo(points[i].x, points[i].y);
+      context.stroke();
+    }
+  }
+}
+
+const undoButton = document.createElement("button");
+undoButton.textContent = "Undo";
+undoButton.addEventListener("click", () => {
+  if (strokes.length > 0) {
+    const previous = strokes.pop();
+    if (previous) {
+      undoneStrokes.push(previous);
+    }
+  }
+  updateCanvas();
+});
+
+app.append(undoButton);
 app.append(clearButton);
