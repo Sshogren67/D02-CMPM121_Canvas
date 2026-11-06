@@ -62,6 +62,8 @@ let selectedTool: ToolType = tools[0];
 type PlacedDrawing = Stroke | Sticker;
 
 let isDrawing = false;
+let currentStroke: Stroke | null = null;
+
 const context = canvas.getContext("2d");
 if (context) {
   context.lineCap = "round";
@@ -82,12 +84,12 @@ canvas.addEventListener("mousedown", (event) => {
   if (selectedTool.type === "marker") {
     isDrawing = true;
 
-    drawings.push({
+    currentStroke = {
       type: "stroke",
       points: [{ x, y }],
       width: selectedTool.width,
       color: selectedTool.color,
-    });
+    };
   } else {
     drawings.push({
       type: "sticker",
@@ -107,17 +109,15 @@ canvas.addEventListener("mousemove", (event) => {
   const x = event.clientX - rect.left;
   const y = event.clientY - rect.top;
 
-  const currentDrawing = drawings[drawings.length - 1];
-
-  if (currentDrawing && currentDrawing.type === "stroke") {
-    currentDrawing.points.push({ x, y });
+  if (currentStroke) {
+    currentStroke.points.push({ x, y });
 
     if (context) {
-      context.lineWidth = currentDrawing.width;
-      context.strokeStyle = currentDrawing.color;
+      context.lineWidth = currentStroke.width;
+      context.strokeStyle = currentStroke.color;
       context.beginPath();
 
-      const points = currentDrawing.points;
+      const points = currentStroke.points;
 
       context.moveTo(
         points[points.length - 2].x,
@@ -135,11 +135,23 @@ canvas.addEventListener("mousemove", (event) => {
 });
 
 canvas.addEventListener("mouseup", () => {
+  if (currentStroke) {
+    drawings.push(currentStroke);
+    currentStroke = null;
+  }
   isDrawing = false;
 });
 
 canvas.addEventListener("mouseleave", () => {
   isDrawing = false;
+});
+
+document.addEventListener("keydown", (event) => {
+  if (event.key === "Escape" && currentStroke) {
+    currentStroke = null;
+    isDrawing = false;
+    updateCanvas();
+  }
 });
 
 const clearButton = document.createElement("button");
