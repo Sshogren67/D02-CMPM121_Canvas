@@ -38,25 +38,26 @@ type Sticker = {
   size: number;
 };
 
-type CursorType = {
+type ToolType = {
   type: "marker";
   width: number;
   color: string;
 } | {
   type: "sticker";
+  name: string;
   emoji: string;
   size: number;
 };
 
-const cursors: CursorType[] = [
+const tools: ToolType[] = [
   { type: "marker", width: 2, color: "black" },
   { type: "marker", width: 8, color: "black" },
-  { type: "sticker", emoji: "👾", size: 30 },
-  { type: "sticker", emoji: "🕹️", size: 30 },
-  { type: "sticker", emoji: "📺", size: 30 },
+  { type: "sticker", name: "sprite", emoji: "👾", size: 30 },
+  { type: "sticker", name: "controller", emoji: "🕹️", size: 30 },
+  { type: "sticker", name: "TV", emoji: "📺", size: 30 },
 ];
 
-let selectedCursor: CursorType = cursors[0];
+let selectedTool: ToolType = tools[0];
 
 type PlacedDrawing = Stroke | Sticker;
 
@@ -78,22 +79,22 @@ canvas.addEventListener("mousedown", (event) => {
 
   undoneDrawings.length = 0;
 
-  if (selectedCursor.type === "marker") {
+  if (selectedTool.type === "marker") {
     isDrawing = true;
 
     drawings.push({
       type: "stroke",
       points: [{ x, y }],
-      width: selectedCursor.width,
-      color: selectedCursor.color,
+      width: selectedTool.width,
+      color: selectedTool.color,
     });
   } else {
     drawings.push({
       type: "sticker",
       x,
       y,
-      emoji: selectedCursor.emoji,
-      size: selectedCursor.size,
+      emoji: selectedTool.emoji,
+      size: selectedTool.size,
     });
     updateCanvas();
   }
@@ -178,6 +179,26 @@ function updateCanvas() {
   }
 }
 
+function addTool(cursor: ToolType) {
+  const button = document.createElement("button");
+
+  if (cursor.type === "marker") {
+    button.textContent = `Marker ${cursor.width}px`;
+  } else {
+    button.textContent = cursor.emoji;
+  }
+
+  button.addEventListener("click", () => {
+    selectedTool = cursor;
+  });
+
+  layerTwo.append(button);
+}
+
+for (const cursor of tools) {
+  addTool(cursor);
+}
+
 const undoButton = document.createElement("button");
 undoButton.textContent = "Undo";
 undoButton.addEventListener("click", () => {
@@ -202,21 +223,24 @@ redoButton.addEventListener("click", () => {
   updateCanvas();
 });
 
-for (const cursor of cursors) {
-  const button = document.createElement("button");
+const createSticker = document.createElement("button");
+createSticker.textContent = "Create Custom Sticker";
+createSticker.addEventListener("click", () => {
+  const sticker = prompt("Enter your own Emoji or Short Text");
+  if (sticker === null || sticker.trim() === "") return;
 
-  if (cursor.type === "marker") {
-    button.textContent = `Marker ${cursor.width}px`;
-  } else {
-    button.textContent = cursor.emoji;
-  }
+  const newCursor: ToolType = {
+    type: "sticker",
+    name: sticker.trim(),
+    emoji: sticker.trim(),
+    size: 30,
+  };
 
-  button.addEventListener("click", () => {
-    selectedCursor = cursor;
-  });
+  tools.push(newCursor);
+  addTool(newCursor);
+});
 
-  layerTwo.append(button);
-}
+layerTwo.append(createSticker);
 
 layerThree.append(undoButton);
 layerThree.append(redoButton);
