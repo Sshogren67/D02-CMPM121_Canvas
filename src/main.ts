@@ -39,6 +39,7 @@ canvas.addEventListener("mousedown", (event) => {
   const rect = canvas.getBoundingClientRect();
   const x = event.clientX - rect.left;
   const y = event.clientY - rect.top;
+  undoneStrokes.length = 0;
   strokes.push({
     points: [{ x, y }],
     width: context?.lineWidth || 5,
@@ -78,6 +79,7 @@ const clearButton = document.createElement("button");
 clearButton.textContent = "Clear Canvas";
 clearButton.addEventListener("click", () => {
   strokes.length = 0;
+  undoneStrokes.length = 0;
   if (context) {
     context.clearRect(0, 0, canvas.width, canvas.height);
   }
@@ -115,5 +117,18 @@ undoButton.addEventListener("click", () => {
   updateCanvas();
 });
 
+const redoButton = document.createElement("button");
+redoButton.textContent = "Restore";
+redoButton.addEventListener("click", () => {
+  if (undoneStrokes.length > 0) {
+    const restoredStroke = undoneStrokes.pop();
+    if (restoredStroke) {
+      strokes.push(restoredStroke);
+    }
+  }
+  updateCanvas();
+});
+
 app.append(undoButton);
+app.append(redoButton);
 app.append(clearButton);
