@@ -2,7 +2,7 @@
 
 By Seamus and Spencer
 
-Uses a canvas to make a fun drawing program.
+Uses a canvas to make a fun drawing program. Makes use of a retro "Windows 94" style. Can select color, size, stickers, undo, redo, and clear.
 
 ## Credits
 

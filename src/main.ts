@@ -1,5 +1,12 @@
 import "./style.css";
 
+const rowDiv = document.createElement("div");
+rowDiv.className = "canvas-row";
+
+const colorDiv = document.createElement("div");
+colorDiv.id = "color-palette";
+rowDiv.append(colorDiv);
+
 const app = document.querySelector<HTMLElement>("#app")!;
 
 const heading = document.createElement("h1");
@@ -10,7 +17,8 @@ const canvas = document.createElement("canvas");
 canvas.width = 500;
 canvas.height = 500;
 canvas.id = "drawing-canvas";
-app.append(canvas);
+rowDiv.append(canvas);
+app.append(rowDiv);
 
 const layerTwo = document.createElement("layer");
 const layerThree = document.createElement("layer");
@@ -45,7 +53,6 @@ type Sticker = {
 type ToolType = {
   type: "marker";
   width: number;
-  color: string;
 } | {
   type: "sticker";
   name: string;
@@ -53,15 +60,57 @@ type ToolType = {
   size: number;
 };
 
+type ColorOption = {
+  name: string;
+  value: string;
+};
+
+let currentColor = "black";
+
 const tools: ToolType[] = [
-  { type: "marker", width: 2, color: "black" },
-  { type: "marker", width: 8, color: "black" },
+  { type: "marker", width: 2 },
+  { type: "marker", width: 8 },
   { type: "sticker", name: "sprite", emoji: "👾", size: 30 },
   { type: "sticker", name: "controller", emoji: "🕹️", size: 30 },
   { type: "sticker", name: "TV", emoji: "📺", size: 30 },
 ];
 
+const colors: ColorOption[] = [
+  { name: "Black", value: "black" },
+  { name: "White", value: "white" },
+  { name: "Red", value: "red" },
+  { name: "Yellow", value: "yellow" },
+  { name: "Green", value: "green" },
+  { name: "Blue", value: "blue" },
+  { name: "Purple", value: "purple" },
+  { name: "Orange", value: "orange" },
+];
+
 let selectedTool: ToolType = tools[0];
+
+class ColorPalette {
+  constructor(private colors: ColorOption[]) {
+    this.colors.forEach((color) => {
+      const button = document.createElement("button");
+      button.ariaLabel = color.name;
+      button.title = color.name;
+      button.className = "color-button";
+      button.style.backgroundColor = color.value;
+      button.addEventListener("click", () => {
+        currentColor = color.value;
+        button.classList.toggle("selected");
+        document.querySelectorAll(".color-button").forEach((btn) => {
+          if (btn !== button) {
+            btn.classList.remove("selected");
+          }
+        });
+      });
+      colorDiv.append(button);
+    });
+  }
+}
+
+new ColorPalette(colors);
 
 type PlacedDrawing = Stroke | Sticker;
 
@@ -92,7 +141,7 @@ canvas.addEventListener("mousedown", (event) => {
       type: "stroke",
       points: [{ x, y }],
       width: selectedTool.width,
-      color: selectedTool.color,
+      color: currentColor,
       draw(context: CanvasRenderingContext2D) {
         drawStroke(this, context);
       },
