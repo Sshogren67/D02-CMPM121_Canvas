@@ -9,19 +9,56 @@ app.append(heading);
 const canvas = document.createElement("canvas");
 canvas.width = 500;
 canvas.height = 500;
-canvas.style.border = "1px solid black";
 canvas.id = "drawing-canvas";
 app.append(canvas);
+
+const layerTwo = document.createElement("layer");
+const layerThree = document.createElement("layer");
+
+app.append(layerTwo);
+app.append(layerThree);
 
 type Point = {
   x: number;
   y: number;
 };
+
 type Stroke = {
+  type: "stroke";
   points: Point[];
   width: number;
   color: string;
 };
+
+type Sticker = {
+  type: "sticker";
+  x: number;
+  y: number;
+  emoji: string;
+  size: number;
+};
+
+type CursorType = {
+  type: "marker";
+  width: number;
+  color: string;
+} | {
+  type: "sticker";
+  emoji: string;
+  size: number;
+};
+
+const cursors: CursorType[] = [
+  { type: "marker", width: 2, color: "black" },
+  { type: "marker", width: 8, color: "black" },
+  { type: "sticker", emoji: "👾", size: 30 },
+  { type: "sticker", emoji: "🕹️", size: 30 },
+  { type: "sticker", emoji: "📺", size: 30 },
+];
+
+let selectedCursor: CursorType = cursors[0];
+
+type PlacedDrawing = Stroke | Sticker;
 
 let isDrawing = false;
 const context = canvas.getContext("2d");
@@ -31,39 +68,68 @@ if (context) {
   context.strokeStyle = "black";
 }
 
-const strokes: Stroke[] = [];
-const undoneStrokes: Stroke[] = [];
+const drawings: PlacedDrawing[] = [];
+const undoneDrawings: PlacedDrawing[] = [];
 
 canvas.addEventListener("mousedown", (event) => {
-  isDrawing = true;
   const rect = canvas.getBoundingClientRect();
   const x = event.clientX - rect.left;
   const y = event.clientY - rect.top;
-  undoneStrokes.length = 0;
-  strokes.push({
-    points: [{ x, y }],
-    width: context?.lineWidth || 5,
-    color: context && typeof context.strokeStyle === "string"
-      ? context.strokeStyle
-      : "black",
-  });
+
+  undoneDrawings.length = 0;
+
+  if (selectedCursor.type === "marker") {
+    isDrawing = true;
+
+    drawings.push({
+      type: "stroke",
+      points: [{ x, y }],
+      width: selectedCursor.width,
+      color: selectedCursor.color,
+    });
+  } else {
+    drawings.push({
+      type: "sticker",
+      x,
+      y,
+      emoji: selectedCursor.emoji,
+      size: selectedCursor.size,
+    });
+    updateCanvas();
+  }
 });
 
 canvas.addEventListener("mousemove", (event) => {
   if (!isDrawing) return;
+
   const rect = canvas.getBoundingClientRect();
   const x = event.clientX - rect.left;
   const y = event.clientY - rect.top;
-  const currentStroke = strokes[strokes.length - 1];
-  currentStroke.points.push({ x, y });
-  if (context) {
-    context.lineWidth = currentStroke.width;
-    context.strokeStyle = currentStroke.color;
-    context.beginPath();
-    const points = currentStroke.points;
-    context.moveTo(points[points.length - 2].x, points[points.length - 2].y);
-    context.lineTo(points[points.length - 1].x, points[points.length - 1].y);
-    context.stroke();
+
+  const currentDrawing = drawings[drawings.length - 1];
+
+  if (currentDrawing && currentDrawing.type === "stroke") {
+    currentDrawing.points.push({ x, y });
+
+    if (context) {
+      context.lineWidth = currentDrawing.width;
+      context.strokeStyle = currentDrawing.color;
+      context.beginPath();
+
+      const points = currentDrawing.points;
+
+      context.moveTo(
+        points[points.length - 2].x,
+        points[points.length - 2].y,
+      );
+
+      context.lineTo(
+        points[points.length - 1].x,
+        points[points.length - 1].y,
+      );
+
+      context.stroke();
+    }
   }
 });
 
@@ -78,8 +144,8 @@ canvas.addEventListener("mouseleave", () => {
 const clearButton = document.createElement("button");
 clearButton.textContent = "Clear Canvas";
 clearButton.addEventListener("click", () => {
-  strokes.length = 0;
-  undoneStrokes.length = 0;
+  drawings.length = 0;
+  undoneDrawings.length = 0;
   if (context) {
     context.clearRect(0, 0, canvas.width, canvas.height);
   }
@@ -90,17 +156,24 @@ function updateCanvas() {
 
   context.clearRect(0, 0, canvas.width, canvas.height);
 
-  for (const stroke of strokes) {
-    context.beginPath();
-    context.lineWidth = stroke.width;
-    context.strokeStyle = stroke.color;
+  for (const drawing of drawings) {
+    if (drawing.type === "stroke") {
+      context.beginPath();
+      context.lineWidth = drawing.width;
+      context.strokeStyle = drawing.color;
 
-    const points = stroke.points;
+      const points = drawing.points;
 
-    for (let i = 1; i < points.length; i++) {
-      context.moveTo(points[i - 1].x, points[i - 1].y);
-      context.lineTo(points[i].x, points[i].y);
-      context.stroke();
+      for (let i = 1; i < points.length; i++) {
+        context.moveTo(points[i - 1].x, points[i - 1].y);
+        context.lineTo(points[i].x, points[i].y);
+        context.stroke();
+      }
+    } else {
+      context.font = `${drawing.size}px Arial`;
+      context.textAlign = "center";
+      context.textBaseline = "middle";
+      context.fillText(drawing.emoji, drawing.x, drawing.y);
     }
   }
 }
@@ -108,10 +181,10 @@ function updateCanvas() {
 const undoButton = document.createElement("button");
 undoButton.textContent = "Undo";
 undoButton.addEventListener("click", () => {
-  if (strokes.length > 0) {
-    const previous = strokes.pop();
+  if (drawings.length > 0) {
+    const previous = drawings.pop();
     if (previous) {
-      undoneStrokes.push(previous);
+      undoneDrawings.push(previous);
     }
   }
   updateCanvas();
@@ -120,15 +193,31 @@ undoButton.addEventListener("click", () => {
 const redoButton = document.createElement("button");
 redoButton.textContent = "Restore";
 redoButton.addEventListener("click", () => {
-  if (undoneStrokes.length > 0) {
-    const restoredStroke = undoneStrokes.pop();
+  if (undoneDrawings.length > 0) {
+    const restoredStroke = undoneDrawings.pop();
     if (restoredStroke) {
-      strokes.push(restoredStroke);
+      drawings.push(restoredStroke);
     }
   }
   updateCanvas();
 });
 
-app.append(undoButton);
-app.append(redoButton);
-app.append(clearButton);
+for (const cursor of cursors) {
+  const button = document.createElement("button");
+
+  if (cursor.type === "marker") {
+    button.textContent = `Marker ${cursor.width}px`;
+  } else {
+    button.textContent = cursor.emoji;
+  }
+
+  button.addEventListener("click", () => {
+    selectedCursor = cursor;
+  });
+
+  layerTwo.append(button);
+}
+
+layerThree.append(undoButton);
+layerThree.append(redoButton);
+layerThree.append(clearButton);
