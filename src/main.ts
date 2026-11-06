@@ -14,9 +14,11 @@ app.append(canvas);
 
 const layerTwo = document.createElement("layer");
 const layerThree = document.createElement("layer");
+const layerFour = document.createElement("layer");
 
 app.append(layerTwo);
 app.append(layerThree);
+app.append(layerFour);
 
 type Point = {
   x: number;
@@ -28,14 +30,16 @@ type Stroke = {
   points: Point[];
   width: number;
   color: string;
+  draw(context: CanvasRenderingContext2D): void;
 };
 
 type Sticker = {
   type: "sticker";
   x: number;
   y: number;
-  emoji: string;
+  image: string;
   size: number;
+  draw(context: CanvasRenderingContext2D): void;
 };
 
 type ToolType = {
@@ -89,14 +93,20 @@ canvas.addEventListener("mousedown", (event) => {
       points: [{ x, y }],
       width: selectedTool.width,
       color: selectedTool.color,
+      draw(context: CanvasRenderingContext2D) {
+        drawStroke(this, context);
+      },
     };
   } else {
     drawings.push({
       type: "sticker",
       x,
       y,
-      emoji: selectedTool.emoji,
+      image: selectedTool.emoji,
       size: selectedTool.size,
+      draw(context: CanvasRenderingContext2D) {
+        drawSticker(this, context);
+      },
     });
     updateCanvas();
   }
@@ -170,24 +180,7 @@ function updateCanvas() {
   context.clearRect(0, 0, canvas.width, canvas.height);
 
   for (const drawing of drawings) {
-    if (drawing.type === "stroke") {
-      context.beginPath();
-      context.lineWidth = drawing.width;
-      context.strokeStyle = drawing.color;
-
-      const points = drawing.points;
-
-      for (let i = 1; i < points.length; i++) {
-        context.moveTo(points[i - 1].x, points[i - 1].y);
-        context.lineTo(points[i].x, points[i].y);
-        context.stroke();
-      }
-    } else {
-      context.font = `${drawing.size}px Arial`;
-      context.textAlign = "center";
-      context.textBaseline = "middle";
-      context.fillText(drawing.emoji, drawing.x, drawing.y);
-    }
+    drawing.draw(context);
   }
 }
 
@@ -209,6 +202,54 @@ function addTool(cursor: ToolType) {
 
 for (const cursor of tools) {
   addTool(cursor);
+}
+
+function drawStroke(
+  stroke: Stroke,
+  context: CanvasRenderingContext2D,
+) {
+  context.save();
+
+  context.beginPath();
+  context.lineWidth = stroke.width;
+  context.strokeStyle = stroke.color;
+
+  for (let i = 1; i < stroke.points.length; i++) {
+    context.moveTo(stroke.points[i - 1].x, stroke.points[i - 1].y);
+    context.lineTo(stroke.points[i].x, stroke.points[i].y);
+  }
+
+  context.stroke();
+  context.restore();
+}
+
+function drawSticker(
+  sticker: Sticker,
+  context: CanvasRenderingContext2D,
+) {
+  context.save();
+
+  context.font = `${sticker.size}px Arial`;
+  context.textAlign = "center";
+  context.textBaseline = "middle";
+  context.fillText(sticker.image, sticker.x, sticker.y);
+
+  context.restore();
+}
+
+function exportDrawing() {
+  if (!exportContext) return;
+
+  exportContext.clearRect(0, 0, exportCanvas.width, exportCanvas.height);
+
+  exportContext.fillStyle = "white";
+  exportContext.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
+
+  exportContext.scale(2, 2);
+
+  for (const drawing of drawings) {
+    drawing.draw(exportContext);
+  }
 }
 
 const undoButton = document.createElement("button");
@@ -252,8 +293,38 @@ createSticker.addEventListener("click", () => {
   addTool(newCursor);
 });
 
+const exportButton = document.createElement("button");
+exportButton.textContent = "Export PNG";
+
+const exportCanvas = document.createElement("canvas");
+exportCanvas.width = canvas.width * 2;
+exportCanvas.height = canvas.height * 2;
+
+const exportContext = exportCanvas.getContext("2d");
+
+exportButton.addEventListener("click", () => {
+  exportDrawing();
+
+  exportCanvas.toBlob((blob) => {
+    if (!blob) return;
+
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = "my-drawing.png";
+    link.click();
+
+    setTimeout(() => {
+      URL.revokeObjectURL(url);
+    }, 1000);
+  }, "image/png");
+});
+
 layerTwo.append(createSticker);
 
 layerThree.append(undoButton);
 layerThree.append(redoButton);
 layerThree.append(clearButton);
+
+layerFour.append(exportButton);
