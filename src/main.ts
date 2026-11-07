@@ -11,12 +11,14 @@ const app = document.querySelector<HTMLElement>("#app")!;
 
 const heading = document.createElement("h1");
 heading.textContent = "Spencer and Seamus' Drawing Canvas";
+heading.className = "heading-style";
 app.append(heading);
 
 const canvas = document.createElement("canvas");
 canvas.width = 500;
 canvas.height = 500;
 canvas.id = "drawing-canvas";
+canvas.className = "canvas-style";
 rowDiv.append(canvas);
 app.append(rowDiv);
 
@@ -27,6 +29,14 @@ const layerFour = document.createElement("layer");
 app.append(layerTwo);
 app.append(layerThree);
 app.append(layerFour);
+
+const _colorConstants: ColorOption[] = [
+  { name: "LIGHTGREY", value: "#c0c0c0" },
+  { name: "DARKGREY", value: "#808080" },
+  { name: "WHITE", value: "#dfdfdf" },
+  { name: "BLACK", value: "#000000" },
+  { name: "BUTTONFACE", value: "#c0c0c0" },
+];
 
 type Point = {
   x: number;
@@ -215,6 +225,7 @@ document.addEventListener("keydown", (event) => {
 
 const clearButton = document.createElement("button");
 clearButton.textContent = "Clear Canvas";
+clearButton.className = "tool-button";
 clearButton.addEventListener("click", () => {
   drawings.length = 0;
   undoneDrawings.length = 0;
@@ -235,6 +246,8 @@ function updateCanvas() {
 
 function addTool(cursor: ToolType) {
   const button = document.createElement("button");
+  button.className = "tool-button";
+  button.classList.add("tool-button");
 
   if (cursor.type === "marker") {
     button.textContent = `Marker ${cursor.width}px`;
@@ -303,6 +316,7 @@ function exportDrawing() {
 
 const undoButton = document.createElement("button");
 undoButton.textContent = "Undo";
+undoButton.className = "tool-button";
 undoButton.addEventListener("click", () => {
   if (drawings.length > 0) {
     const previous = drawings.pop();
@@ -315,6 +329,7 @@ undoButton.addEventListener("click", () => {
 
 const redoButton = document.createElement("button");
 redoButton.textContent = "Restore";
+redoButton.className = "tool-button";
 redoButton.addEventListener("click", () => {
   if (undoneDrawings.length > 0) {
     const restoredStroke = undoneDrawings.pop();
@@ -327,6 +342,7 @@ redoButton.addEventListener("click", () => {
 
 const createSticker = document.createElement("button");
 createSticker.textContent = "Create Custom Sticker";
+createSticker.className = "tool-button";
 createSticker.addEventListener("click", () => {
   const sticker = prompt("Enter your own Emoji or Short Text");
   if (sticker === null || sticker.trim() === "") return;
@@ -344,6 +360,7 @@ createSticker.addEventListener("click", () => {
 
 const exportButton = document.createElement("button");
 exportButton.textContent = "Export PNG";
+exportButton.className = "tool-button";
 
 const exportCanvas = document.createElement("canvas");
 exportCanvas.width = canvas.width * 2;

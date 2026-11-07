@@ -3,6 +3,10 @@
   flex-direction: column;
   align-items: center;
   gap: 10px;
+  background-color: #c0c0c0;
+  color: black;
+  padding: 10px;
+  font-family: "MS Sans Serif";
 }
 
 #color-palette {
@@ -12,7 +16,6 @@
 }
 
 #drawing-canvas {
-  border: 4px solid black;
   display: block;
 }
 
@@ -21,6 +24,15 @@
   gap: 8px;
   justify-content: center;
   flex-wrap: wrap;
+}
+
+.heading-style {
+  font-family: "MS Sans Serif";
+  font-size: 16px;
+  font-weight: bold;
+  color: black;
+  margin: 10px 0;
+  text-shadow: 1px 1px 0px white;
 }
 
 .canvas-row {
@@ -40,4 +52,46 @@
 .color-button.selected {
   border-style: inset;
   box-shadow: 1px 1px 0px #555;
+}
+
+.tool-button {
+  background-color: BUTTONFACE;
+  color: black;
+  font-family: "MS Sans Serif";
+  font-size: 12px;
+  padding: 4px 12px;
+  min-width: 70px;
+  height: 23px;
+  border: 2px solid;
+  border-top-color: WHITE;
+  border-right-color: WHITE;
+  border-bottom-color: DARKGRAY;
+  border-left-color: DARKGRAY;
+  cursor: pointer;
+
+  text-align: center;
+  vertical-align: middle;
+  font-weight: normal;
+
+  .tool-button:active,
+  .tool-button.selected {
+    border-style: inset;
+    border-top-color: DARKGRAY;
+    border-right-color: DARKGRAY;
+    border-bottom-color: WHITE;
+    border-left-color: WHITE;
+  }
+}
+
+.canvas-style {
+  border: 2px solid;
+  border-top-color: WHITE;
+  border-right-color: WHITE;
+  border-bottom-color: DARKGRAY;
+  border-left-color: DARKGRAY;
+
+  outline: 1px solid gray;
+  outline-offset: -3px;
+
+  background-color: WHITE;
 }
