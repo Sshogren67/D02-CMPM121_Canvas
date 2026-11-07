@@ -72,15 +72,15 @@
   text-align: center;
   vertical-align: middle;
   font-weight: normal;
+}
 
-  .tool-button:active,
-  .tool-button.selected {
-    border-style: inset;
-    border-top-color: DARKGRAY;
-    border-right-color: DARKGRAY;
-    border-bottom-color: WHITE;
-    border-left-color: WHITE;
-  }
+.tool-button:active,
+.tool-button.selected {
+  border-style: inset;
+  border-top-color: DARKGRAY;
+  border-right-color: DARKGRAY;
+  border-bottom-color: WHITE;
+  border-left-color: WHITE;
 }
 
 .canvas-style {

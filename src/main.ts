@@ -257,6 +257,10 @@ function addTool(cursor: ToolType) {
 
   button.addEventListener("click", () => {
     selectedTool = cursor;
+    document.querySelectorAll(".tool-button").forEach((btn) => {
+      btn.classList.remove("selected");
+    });
+    button.classList.add("selected");
   });
 
   layerTwo.append(button);
